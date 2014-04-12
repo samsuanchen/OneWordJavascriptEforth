@@ -1,0 +1,42 @@
+all {
+	font-family: "²Ó©úÅé"; 
+}
+pre, textarea {
+	border: 1px solid fuchsia;
+	width: 633px;
+	height: 212px;
+	overflow: auto;
+	overflow-y: auto;
+	overflow-x: none;
+	margin-top: 0; 
+	margin-bottom: 0;
+}
+pre {
+	text-align: left;
+}
+table {
+	border: 1px solid fuchsia;
+	width: 635px;
+	height: 200px;
+	overflow: auto;
+	overflow-y: auto;
+	overflow-x: none;
+	margin-top: 7; 
+	margin-bottom: 0;
+}
+td {
+    text-align: center; 
+    vertical-align: middle;
+}
+inp, mrk {
+	color: blue;
+}
+wrn {
+	color: pink;
+}
+err {
+	color: red;
+}
+ok {
+	color: green;
+}
