@@ -6,8 +6,8 @@
 	this.exec = exec			// outer interpreter (the export function)
 	this.type = 0				// function for typing out (the import function)
 	var compiledCode = [0]
-	var dStk = [], rStk = [], lines=[], tib = "", token = ""
-	var ip = 0, dp = 1, error = 0, compiling = 0, iTib = 0, base = 10, hName, hXt
+	var dStk = [], rStk = [], lines=[], tib = "", token = "", src = ""
+	var ip = 0, dp = 1, error = 0, compiling = 0, iTib = 0, base = 10, hName, hXt, line
 	function reset	 (   ) { error = 1, dStk = [], rStk = [] }
 	function print	 (msg) { if (type && msg) type(msg)		 }
 	function cr		 (   ) { print("\n"					   ) }
@@ -41,7 +41,7 @@
 			if (notWhiteSpaces(tib.charAt(iTib))) break
 			iTib++
 	}	}
-	function nextToken () {
+	function nxtTkn () {
 	 	ignoreWhiteSpaces()
 		token = ""
 		var m = tib.substr(iTib).match(/\S+/)
@@ -49,7 +49,7 @@
 		return token
 	}
 	var dictionary = {}, words = [0]
-	function findword (name) {				// get word ID by given name
+	function fndWrd (name) {				// get word ID by given name
 		var ID = IDs = dictionary[name]		// get all ids of given name
 		if (IDs) ID = IDs[IDs.length-1]		// get last id
 		return ID							// could be undefined
@@ -58,7 +58,7 @@
 	function compileCode (ID, n) {			// compile a forth word (given index or name)
 		if (typeof(ID) === "string") {
 			var name = ID
-			ID = findword(name)
+			ID = fndWrd(name)
 			if (!ID) { 
 				abort('"'+name+'" undefined for token "'+token+'"')
 				return
@@ -89,16 +89,20 @@
 		return n							// could be undefined
 	}
 	function exec (cmds) {					// outer interpreter (source code)
-		lines = cmds.split(/\r?\n/), error = 0
+		lines = cmds.split(/\r?\n/), error = 0, src='', compiling = 0
 		var ID, word, n
 		while (lines.length) {
+			if (compiling) {
+				if (src) src += '\n'+tib
+				else src = tib.substr(hSrc)
+			}
 			tib = lines.shift(), iTib = 0	
 			if (tib.trim()) {
 				showInp(tib.replace(/</g,'&lt;'))
 				do {
-					token = nextToken() 						// get token
+					token = nxtTkn() 						// get token
 					if (!token) break
-					ID = findword(token) 						// search word for ID
+					ID = fndWrd(token) 						// search word for ID
 					if (ID) {
 						word = words[ID]						// get word
 						if (word.immediate || ! compiling) {
@@ -127,7 +131,7 @@
 	var end_code = 'end-code'
 	var code = function() { // code ( <name> -- ) define new word using javaScript
 		ignoreWhiteSpaces()
-		var name = nextToken(), line, func, n, xt
+		var name = nxtTkn(), line, func, n, xt
 		while (tib.substr(iTib).indexOf(end_code)<0 && lines.length)  {
 			line = '\r\n'+lines.shift(); tib += line; showInp(line)
 		}
@@ -148,11 +152,14 @@
 		var IDs = dictionary[name], nWords = words.length
 		if (IDs) {
 			IDs.push(nWords)
-			print(' <wrn>"' + name + '" redefined ' + IDs.length + ' times</wrn>') 
+			print(' <wrn>"' + name + '" defined ' + IDs.length + ' times</wrn>') 
 		} else dictionary[name] = [nWords]
 		words.push(word)
 	}
- 	newWord("code", code)					// the only defined word
+ 	newWord('code', code)					// the only defined word
+ 	newWord('dbg',function(){
+ 		console.log(words.length)
+ 	})
   } 			
   window.eForthVM = eForthVM				// export
 } ) (); 									// execute Main
