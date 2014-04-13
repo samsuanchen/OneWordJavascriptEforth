@@ -5,39 +5,39 @@
   function eForthVM () {		// VM for eForth
 	this.exec = exec			// outer interpreter (the export function)
 	this.type = 0				// function for typing out (the import function)
-	var	src = ""				// high level source code
-	var	user = []				// user variable data space
-	var dStk = []				// data stack passing process result among words
-	var	rStk = []				// return stack for high level calling
 	var compiledCode = [0]		// list keeping high level compiled code space
 	var words = [0]				// list of all defined words
 	var dictionary = {}			// object for the word id list of each unique name
-	var	lines = []				// source code waiting for processing
-	var line					// line just shifted out for processing 
-	var	tib = ""				// source code for processing
-	var iTib = 0				// offset for source code being processed
-	var	token = ""				// curren parsed token
-	var ip = 0					// point to compiled code during processing
-	var dp = 1					// point to compiled code during compiling
-	var error = 0				// error code of illegal syntax
-	var compiling = 0			// state of compiling
-	var base = 10				// number convering base (delfault 10 for decimal)
-	var hName					// name 				 of high level word (being defined)
-	var hSrc					// source   code pointer of high level word (being defined)
-	var hXt						// compiled code pointer of high level word (being defined)
+	var	user = new Array(16)	// user data space
+	var dStk	  = user[ 0] =[]// data stack passing process result among words
+	var	rStk	  = user[ 1] =[]// return stack for high level calling
+	var	lines	  = user[ 2] =[]// source code waiting for processing
+	var line	  = user[ 3]		// line just shifted out for processing 
+	var	tib		  = user[ 4] =""// source code for processing
+	var iTib	  = user[ 5] = 0// offset for source code being processed
+	var	token	  = user[ 6] =""// curren parsed token
+	var ip		  = user[ 7] = 0// point to compiled code during processing
+	var dp		  = user[ 8] = 1// point to compiled code during compiling
+	var error	  = user[ 9] = 0// error code of illegal syntax
+	var compiling = user[10] = 0// state of compiling
+	var base	  = user[11] =10// number convering base (delfault 10 for decimal)
+	var hName	  = user[12]	// name 				 of high level word (being defined)
+	var hXt		  = user[13]	// compiled code pointer of high level word (being defined)
+	var hSrc	  = user[14]	// source   code pointer of high level word (being defined)
+	var	src		  = user[15] =""// high level source code
 	function reset	 (   ) { error = 1, dStk = [], rStk = [] }
 	function print	 (msg) { if (type && msg) type(msg)		 }
 	function cr		 (   ) { print("\n"					   ) }
 	function showOk  (txt) { print(' <ok>' + txt + '</ok>' ) }
 	function showInp (txt) { print('<inp>' + txt + '</inp>') }
 	function showWrn (txt) { print('<wrn>' + txt + '</wrn>') }
-	function showErr (txt) { print('<err>' + txt + '</err>') }
+	function showErr (txt) { print('<err>' + txt + '</err>\n') }
 	function abort   (msg) {
 		if (compiling) {
 			compiling = 0
 			msg += '\nWhile defining high level word "' + hName +'"'
 		} else {
-			var m = msg.match(/token (.+)/)
+			var m = msg.match(/Unexpected token (.+)/)
 			if (m) {
 				msg += '\nWhile coding low level word "' + token +'"'
 			//////////////////////////////////////////////////////////////////
