@@ -41,16 +41,18 @@
 			if (m) {
 				msg += '\nWhile coding low level word "' + token +'"'
 			//////////////////////////////////////////////////////////////////
-				var t = m[1].replace(/[\][(){}.+*?]/g,function(m){			//
-					return '\\'+m											//
+				var O = out || output.innerHTML								//
+					O = O.split(/\n<inp>\s*code /)							//
+				var S = O[O.length-1]										// the source code
+				var p = RegExp(m[1].replace(/[\][(){}.+*?]/g, function(m){	// pattern for token
+					return '\\'+m											// 
+				}),'g')														//
+				O[O.length-1] = S = S.replace(p,function(t) {				// highlight token
+					return '<err>' +  t + '</err>'							//
 				})															//
-				var p = RegExp(t,'g')										//
-				var O = output.innerHTML.split(/<\/inp>\n<inp>\s*code /)	//
-				var L = O[O.length-1]										//
-				O[O.length-1] = L.replace(p,function(e) {					//
-					return '<err>' +  e + '</err>'							//
-				})															//
-				output.innerHTML=O.join('\ncode ')							//
+				O = O.join('\n<inp>code ')									//
+				if (out) out = O											//
+				else output.innerHTML = O									// update output
 			//////////////////////////////////////////////////////////////////
 		}	}
 		showErr('\n' + msg + '\n'); reset() 
@@ -93,35 +95,37 @@
 	}
 	function execute (xt) {
 		if (typeof(xt)==="function")
-			 xt()							// execute low  level compiled code
-		else call(xt)						// execute high level compiled code
+			 xt()								// execute low  level compiled code
+		else call(xt)							// execute high level compiled code
 	}
-	function call (icompiledCode) { var ID, xt		// inner interpreter (compiled code)
-		rStk.push(ip)
+	function call (icompiledCode) { var ID, xt	// inner compiled code interpreter
+		rStk.push(ip)							// 
 		error=0, ip=icompiledCode
 		while (ip) {
-		    ID=compiledCode[ip++], xt=words[ID].xt; 
+		    ID=compiledCode[ip++]
+		    xt=words[ID].xt; 
 			if (typeof(xt) === 'function') xt()
 			else call(xt)
 	}	}
 	function parseNum (token) { var n
-		if ( token.match(/^\$[0-9A-Fa-f]+$/) )
+		if ( token.match(/^\$[0-9A-Fa-f]+$/) )	// hex number syntax of leading $
 			n = parseInt(token.substr(1), 16)
-		else if (base !== 10)
+		else if (base !== 10)					// non-decimal number
 			n = parseInt(token, base)
-		else if (! isNaN(token))
+		else if (! isNaN(token))				// decimal floating number
 			n = parseFloat(token)
-		return n							// could be undefined
+		return n								// n could be undefined
 	}
-	function exec (cmds) {					// outer interpreter (source code)
-		lines = cmds.split(/\r?\n/), error = 0, src='', compiling = 0
-		var ID, word, n
+	function exec (cmds) {						// outer source code interpreter
+		lines = cmds.split(/\n/)				// split source code into lines
+		error = 0, compiling = 0, tib = src=''	// initial setting
+		var ID, word, n							// local variables
 		while (lines.length) {
 			if (compiling) {
-				if (src) src += '\n'+tib
+				if (src) src += '\n' + tib
 				else src = tib.substr(hSrc)
 			}
-			tib = lines.shift(), iTib = 0	
+			tib = lines.shift(), iTib = 0
 			if (tib.trim()) {
 				showInp(tib.replace(/</g,'&lt;'))
 				do {
