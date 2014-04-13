@@ -1,10 +1,10 @@
-code immediate function () { // 定義 immediate 宣告 最後定義的 指令 在編譯狀態 也能執行
+code immediate function () { // 定義 immediate 使 最後定義的指令 編譯狀態能執行
   words[words.length-1]		// 最後定義的 指令
-  .immediate=1			// 設定為 在編譯狀態 也能執行
+  .immediate=1			// 設定為 編譯狀態能執行
 } end-code
 code \ function () { // 定義 \ 忽略原碼字串到 列尾
   iTib=tib.length		// iTib 指到 tib 之後
-} end-code immediate		\  設定 反斜線符號 指令 在編譯狀態 也能執行
+} end-code immediate		\  設定 反斜線符號指令 在編譯狀態也能執行
 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 \ 前述 code 指令 定義了 immediate 及 反斜線符號 倆新指令, 反斜線符號 用作註解	\
 \ 注意! 反斜線符號 之後必須 空格 這樣 接下來的原碼字串 才會當作 註解 直到列尾	\
@@ -19,7 +19,7 @@ code find function () { // 定義 find 取得 已定義指令的 id (在 words �
   var id=fndWrd(nxtTkn())	// 以 隨後 token 作 指令名稱 取其 id
   dStk.push(id)			// id 可能是 undefined
 } end-code
-code ' function () { // 定義 ' 取得 已定義指令的 id (在 words 中的序號)
+code ' function () { // 定義 ' 取得 已定義指令的 id (在 words 陣列中的序號)
   var id=fndWrd(nxtTkn())	// 以 隨後 token 字串 作 指令名稱 取其 id
   if (id) dStk.push(id)		// 若 id 有定義 就放上堆疊
   else abort(id)		// 若 id 未定義 就 abort
@@ -35,26 +35,26 @@ code : function () { // 定義 : 用以定義 高階指令
   hXt=compiledCode.length 	// 以 hXt 指到 高階指令 編碼起點
   compiling=1			// 進入 編譯狀態
 } end-code 
-code compileOnly function () { // 定義 compileOnly 宣告 最後定義的 指令 在編譯狀態 才能編碼
+code compileOnly function () { // 定義 compileOnly 使 最後定義指令 編譯狀態才編碼
   words[words.length-1]		// 最後定義的 指令
-  .compileOnly=1		// 設定為 編譯狀態 才能編碼
+  .compileOnly=1		// 設定為 編譯狀態才編碼
 } end-code
 code ret function () { // 定義 ret 結束被呼叫的 高階指令 回上一層 繼續跑
   ip=rStk.pop()			// 從 rStack 取出 ip
-} end-code compileOnly		\  設定 ret 在編譯狀態 才能編碼
+} end-code compileOnly		\  設定 ret 編譯狀態才編碼
 code doLit function () { // 定義 doLit 將 隨後編碼 放上堆疊
   dStk.push(compiledCode[ip++])	// 將 ip 所指 編碼 放上堆疊
-} end-code compileOnly		\  宣告 doLit 在編譯狀態 才能編碼
+} end-code compileOnly		\  宣告 doLit 編譯狀態才編碼
 code ; function () { // 定義 words ; 結束 高階指令
   compileCode("ret")		// 編譯 ret 作為 高階指令 內碼
   compiling=0			// 結束 高階指令 編譯狀態
   if (src)
-    src+=tib.substr(0,iTib)	// 高階指令 的 原碼字串 (多列)
+    src+='\n'+tib.substr(0,iTib)// 高階指令 的 原碼字串 (多列)
   else
     src=tib.substring(hSrc,iTib)// 高階指令 的 原碼字串 (一列)
   newWord(hName,hXt,src)	// 以 名稱 內碼起點 原碼字串 定義 高階指令
 } end-code
-  compileOnly immediate		\  宣告 ; 在編譯狀態 才能編碼 也能執行
+  compileOnly immediate		\  宣告 ; 編譯狀態 才編碼 能執行
 code + function () { // 定義 + 取出 堆頂 倆數值 相加後 放上 堆頂 (也可用以銜接倆字串)
   var x=dStk.pop()		// 從堆疊取出 堆頂數值 n
   dStk[dStk.length-1]+=x	// 堆頂數值=堆頂數值+n
@@ -93,41 +93,53 @@ words \ 檢視 所有 指令名稱
 code uniqueWords function () { // 定義 uniqueWords 檢視 所有 指令名稱 (不重複)
   var t=''
   for(var w in dictionary)	// 從 dictionary 物件 針對每個指令 w
-    t+=' '+w			// 以空格區隔
+    t+=' '+w			// 採用	空格 區隔
   print(t)			// 列印
 } end-code
 uniqueWords \ 檢視 所有 指令名稱 (不重複)
-: sq \ 定義 sq 將 堆頂數值 平方
-  dup				\  複製 堆頂數值
+: sq \ 定義 sq 計算 堆頂數值 的平方
+  dup				\  複製	堆頂數值
   *				\  相乘
-;				\  結束 定義
-5 sq .				\  列印 5 的 平方
-dbg
-: 2sq
-  sq
-  2 * 
-; 3 2sq .
-code char function () { // 定義 char 
-  var c=nxtTkn().substr(0,1)
-  if(compiling) compileCode('doLit',c)
-  else dStk.push(c)
-} end-code immediate
-char a .
-: a char a . ; a
-code see function () {
-  var name=nxtTkn(), ids=dictionary[name]
-  var msg
-  if (ids) {
-    var w=words[ids[ids.length-1]]
-    if (w.src) msg=':'+w.src
-    else msg='code '+name+' '+w.xt+' end-'+'code'
-    if (w.compileOnly) msg+=' compileOnly'
-    if (w.immediate  ) msg+=' immediate'
-  } else msg=name+' '+msg
-  print('\n'+msg)
+;				\  結束	定義
+5 sq . \ 列印出 5 平方 ==> 25
+: 2sq \ 定義 2sq 計算 堆頂數值 平方的 2 倍
+  sq				\  計算	堆頂數值 的平方
+  2 *				\  取其	2 倍
+;				\  結束	定義
+3 2sq . \ 列印出 3 平方的 2 倍 ==> 18
+code char function () { // 定義 char 取隨後 token 字串的 起首字符
+  var c=nxtTkn().substr(0,1)	// 隨後	token 的 起首字符
+  if(compiling)			// 檢視	是否 編譯狀態
+    compileCode('doLit',c)	// 若是	編譯狀態 就將 doLit 及 字符 編碼
+  else dStk.push(c)		// 否則	就將 字符 放上堆疊
+} end-code immediate		\  宣告	char 編譯狀態能執行
+char a .			\  列印	字符 a
+: a char a .			\  定義	a 列印出 字符 a
+; a				\  列印	字符 a
+code see function () { // 定義 see 檢視 指定名稱 指令 的定義源碼
+  var msg			// 輸出	字串
+  var name=nxtTkn()		// 隨後	token 當作 指令名稱
+  var ids=dictionary[name]	// 取其	記錄 id 的陣列
+  if (ids) {			// 檢視	記錄 id 的陣列 是否存在
+    var id=ids[ids.length-1]	// 取其	最後的 id
+    var w=words[id]		// 取其	word
+    if (w.src)			// 檢視	高階定義源碼 是否存在
+	msg=':'+w.src		// 若是	輸出字串 用 高階定義源碼
+    else
+	msg='code '+name	// 否則	字串 接 指令名稱
+		   +' '+w.xt	//	字串 接 低階定義源碼
+		   +' end-'	//	字串 接 'end-'
+		   +'code'	//	字串 接 'code'
+    if (w.compileOnly)		// 檢視	是否 compileOnly
+      msg+=' compileOnly'	// 字串	加接 compileOnly
+    if (w.immediate  )		// 檢視	是否 immediate
+      msg+=' immediate'		// 字串	加接 immediate
+  } else
+      msg=name+' undefined'	// 字串	顯示 未定義
+  print('\n'+msg)		// 列印	字串
 } end-code
-see see
-see a
-see 2sq
-see ;
-see xxx
+see see	\ 檢視 指令 see 的定義源碼
+see a	\ 檢視 指令 a   定義源碼
+see 2sq	\ 檢視 指令 2sq 的定義源碼
+see ;	\ 檢視 指令 ;   的定義源碼
+see xxx	\ 檢視 字串 xxx 的定義源碼

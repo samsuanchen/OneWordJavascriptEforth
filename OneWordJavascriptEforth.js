@@ -1,13 +1,30 @@
 // 	OneWordJavascriptEforth.js	2012/02/16 ~ 2014/04/08
 //	YapCheaHshen@gmail.com, SamSuanChen@gmail.com, ChenHanSunDing@gmail.com
 ( function() { 					// main
-  'uses strict' 				// check all undefined references
+  'uses strict' 				// sytax checking for all undefined
   function eForthVM () {		// VM for eForth
 	this.exec = exec			// outer interpreter (the export function)
 	this.type = 0				// function for typing out (the import function)
-	var compiledCode = [0]
-	var dStk = [], rStk = [], lines=[], tib = "", token = "", src = ""
-	var ip = 0, dp = 1, error = 0, compiling = 0, iTib = 0, base = 10, hName, hXt, line
+	var	src = ""				// high level source code
+	var	user = []				// user variable data space
+	var dStk = []				// data stack passing process result among words
+	var	rStk = []				// return stack for high level calling
+	var compiledCode = [0]		// list keeping high level compiled code space
+	var words = [0]				// list of all defined words
+	var dictionary = {}			// object for the word id list of each unique name
+	var	lines = []				// source code waiting for processing
+	var line					// line just shifted out for processing 
+	var	tib = ""				// source code for processing
+	var iTib = 0				// offset for source code being processed
+	var	token = ""				// curren parsed token
+	var ip = 0					// point to compiled code during processing
+	var dp = 1					// point to compiled code during compiling
+	var error = 0				// error code of illegal syntax
+	var compiling = 0			// state of compiling
+	var base = 10				// number convering base (delfault 10 for decimal)
+	var hName					// name 				 of high level word (being defined)
+	var hSrc					// source   code pointer of high level word (being defined)
+	var hXt						// compiled code pointer of high level word (being defined)
 	function reset	 (   ) { error = 1, dStk = [], rStk = [] }
 	function print	 (msg) { if (type && msg) type(msg)		 }
 	function cr		 (   ) { print("\n"					   ) }
@@ -20,18 +37,21 @@
 			compiling = 0
 			msg += '\nWhile defining high level word "' + hName +'"'
 		} else {
-			var p = /token (.+)/, m = msg.match(p)
+			var m = msg.match(/token (.+)/)
 			if (m) {
 				msg += '\nWhile coding low level word "' + token +'"'
-				var tkn = m[1].replace(/([\]\[\)\(\}\{\.\+\*\?\\])/g,function(m){
-					return '\\'+m
-				})
-				var O=output.innerHTML.split(/<\/inp>\n<inp>\s*code /)
-				L=O[O.length-1]
-				O[O.length-1]=L.replace(RegExp(tkn,'g'),function(t) {
-					return '<err>'+t+'</err>'
-				})
-				output.innerHTML=O.join('\ncode ')
+			//////////////////////////////////////////////////////////////////
+				var t = m[1].replace(/[\][(){}.+*?]/g,function(m){			//
+					return '\\'+m											//
+				})															//
+				var p = RegExp(t,'g')										//
+				var O = output.innerHTML.split(/<\/inp>\n<inp>\s*code /)	//
+				var L = O[O.length-1]										//
+				O[O.length-1] = L.replace(p,function(e) {					//
+					return '<err>' +  e + '</err>'							//
+				})															//
+				output.innerHTML=O.join('\ncode ')							//
+			//////////////////////////////////////////////////////////////////
 		}	}
 		showErr('\n' + msg + '\n'); reset() 
 	}
@@ -41,17 +61,22 @@
 			if (notWhiteSpaces(tib.charAt(iTib))) break
 			iTib++
 	}	}
-	function nxtTkn () {
+	function nxtTkn (deli) {
 	 	ignoreWhiteSpaces()
-		token = ""
-		var m = tib.substr(iTib).match(/\S+/)
-		if (m) { token = m[0]; iTib += tib.substr(iTib).indexOf(token) + token.length }
+		token = tib.substr(iTib)
+		if (deli) {
+			if ((i = token.indexOf(deli))>=0)
+				token=token.substr(0,i)
+		} else {
+			if (m = token.match(/\S+/))
+				token = m[0]
+		}
+		iTib += token.length
 		return token
 	}
-	var dictionary = {}, words = [0]
-	function fndWrd (name) {				// get word ID by given name
+	function fndWrd (name) {				// get word id of given name
 		var ID = IDs = dictionary[name]		// get all ids of given name
-		if (IDs) ID = IDs[IDs.length-1]		// get last id
+		if (IDs) ID = IDs[IDs.length-1]		// get last id of given name
 		return ID							// could be undefined
 	}
 	function compile (x) { compiledCode[dp++] = x }	// compile x (could be any thing)
@@ -129,7 +154,7 @@
 				cr()
 	}	}	}
 	var end_code = 'end-code'
-	var code = function() { // code ( <name> -- ) define new word using javaScript
+	var code = function() { // code ( <name> -- ) define a new word using javaScript
 		ignoreWhiteSpaces()
 		var name = nxtTkn(), line, func, n, xt
 		while (tib.substr(iTib).indexOf(end_code)<0 && lines.length)  {
@@ -156,10 +181,11 @@
 		} else dictionary[name] = [nWords]
 		words.push(word)
 	}
- 	newWord('code', code)					// the only defined word
- 	newWord('dbg',function(){
+ 	newWord('code', code)					// this should be the only defined word
+ 	function dbg () {
  		console.log(words.length)
- 	})
+ 	}
+ 	newWord('dbg',dbg)						// this is just for debugging
   } 			
   window.eForthVM = eForthVM				// export
 } ) (); 									// execute Main
