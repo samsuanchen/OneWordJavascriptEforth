@@ -5,19 +5,22 @@ code immediate function () { // 定義 immediate 使 最後定義的指令 編�
 code \ function () { // 定義 \ 忽略原碼字串到 列尾
   iTib=tib.length		// iTib 指到 tib 之後
 } end-code immediate		\  設定 反斜線符號指令 在編譯狀態也能執行
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
-\ 前述 code 指令 定義了 immediate 及 反斜線符號 倆新指令, 反斜線符號 用作註解	\
-\ 注意! 反斜線符號 之後必須 空格 這樣 接下來的原碼字串 才會當作 註解 直到列尾	\
-\ code 之後是 新指令的名稱, 接下來直到 end-code 為所對應的 javascript function	\
-\ 注意! 其間 必須依循 javascript 語法 並以 雙斜線之後 直到列尾的字串 作為註解	\
-\ 用 code 所定義的 是所謂 低階指令 均以 javascript function 描述所指定相關動作	\
-\ (注意! code 之後 如果是字串 function, 此 function 並不當作要定義的 指令名稱	\
-\ 這時 從 function 到 end-code 之前 是純粹用來 定義 javascript function 的	\
-\ 這 javascript function 的名稱在 字串 function 之後 並且可在圓括號內宣告參數 )	\
-\ 在此之後用 code 所定義 冒號 : 及 分號 ; 倆指令 是特別用來定義所謂 高階指令 的	\
-\ 冒號指令 須接 空格 然後才是 新指令名稱, 之後 就可用所有已定義指令描述所要的動作	\
-\ 直到 分號指令為止, 其間包括用 反斜線符號 指令 接 空格 直到列尾的字串 當作註解	\
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
+\ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \
+\			R E A D M E   F I R S T				\
+\ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \
+\ A 前述 code 指令 定義了 immediate 及 反斜線符號 倆新指令, 反斜線符號 用作註解	\
+\   注意! 反斜線符號 之後必須 空格 這樣 接下來的原碼字串 才會當作 註解 直到列尾	\
+\ B code 之後是 新指令名稱, 接下來直到 end-code 為所對應的 javascript function	\
+\   注意! 其間 必須依循 javascript 語法 並以 雙斜線之後 直到列尾的字串 作為註解	\
+\ C 用 code 所定義的 是所謂 低階指令 均以 javascript function 描述所指定相關動作	\
+\ D 注意! code 之後 如果是字串 function, 此 function 並不當作要定義的 指令名稱	\
+\   這時 從 function 到 end-code 之前 是純粹用來 定義 javascript function 的	\
+\   這 javascript function 的名稱在 字串 function 後 並且可在圓括號內宣告參數	\
+\ E 在此之後用 code 所定義 冒號 : 及 分號 ; 倆指令 是特別用來定義所謂 高階指令 的	\
+\   冒號指令 須接 空格 然後才是 新指令名稱, 之後 就可用所有已定義指令描述所要的動作	\
+\   直到 分號指令為止, 其間包括用 反斜線符號 指令 接 空格 直到列尾的字串 當作註解	\
+\ F 清空此 text area 選點 evalute 然後 按 F5 鍵 可從新恢復 text area 原始範例	\
+\ \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \
 code find function () { // 定義 find 取得 已定義指令的 id (在 words 中的序號)
   var id=fndWrd(nxtTkn())	// 以 隨後 token 作 指令名稱 取其 id
   dStk.push(id)			// id 可能是 undefined
@@ -157,124 +160,3 @@ code yyy function () {	// 定義 指令 zzz
   xxx(' yyy')		// 呼叫 javascript function xxx (帶 參數)
 } end-code
 yyy
-
-code (do) function () { // ( bgn lmt -- )
-  var bgn=dStk.pop()
-  rStk.push(dStk.pop()), rStk.push(bgn)
-} end-code compileOnly
-code (loop) function () {
-  var t=rStk.length-1, s=t-1
-  if (++rStk[t]<rStk[s]) {
-    ip=compiledCode[ip]
-    return
-  }
-  ip++, rStk.pop(), rStk.pop()
-} end-code compileOnly
-code [ function () {
-  compiling=0
-} end-code immediate
-code ] function () {
-  compiling=1
-} end-code
-code , function () {
-  compile(dStk.pop())
-} end-code
-code do function () {
-  compileCode('(do)')
-  dStk.push(compiledCode.length)
-} end-code immediate compileOnly
-code loop function () {
-  compileCode('(loop)',dStk.pop())
-} end-code immediate compileOnly
-code r@ function () {
-  dStk.push(rStk[rStk.length-1])
-} end-code
-' r@ alias i
-code >r function () {
-  rStk.push(dStk.pop())
-} end-code compileOnly
-code r> function () {
-  dStk.push(rStk.pop())
-} end-code compileOnly
-: x1 10 1 do i . loop ;
-x1
-code (.") function () {
-  print(compiledCode[ip++])
-} end-code compileOnly
-code ." function () {
-  compileCode('(.")',nxtTkn('"'))
-} end-code compileOnly immediate
-code emit function () {
-  print( String.fromCharCode(dStk.pop()) )
-} end-code
-code cr function () {
-  print('\n')
-} end-code
-: x2 cr ." hello, world" ;
-x2
-code zbranch function () {
-  if (dStk.pop()) ip++
-  else ip=compiledCode[ip]
-} end-code compileOnly
-code branch function () {
-  ip=compiledCode[ip]
-} end-code compileOnly
-code if function () {
-  compileCode('zbranch')
-  dStk.push(compiledCode.length)
-  compile(-1)
-} end-code compileOnly immediate
-code else function () {
-  compiledCode[dStk.pop()]=compiledCode.length+2
-  compileCode('branch')
-  dStk.push(compiledCode.length)
-  compile(-1)
-} end-code compileOnly immediate
-code then function () {
-  compiledCode[dStk.pop()]=compiledCode.length
-} end-code compileOnly immediate
-dbg
-: x3 dup . ."  is "
-  if ." non-"
-  then ." zero" ;
-0 x3
-5 x3
-: x4 dup . ."  is "
-  if ." non-zero"
-  else ." zero"
-  then ;
-0 x4
-5 x4
-code begin function () {
-  dStk.push(compiledCode.length)
-} end-code compileOnly immediate
-' ret alias exit
-code again function () {
-  compileCode('branch',dStk.pop())
-} end-code compileOnly immediate
-code until function () {
-  compileCode('zbranch',dStk.pop())
-} end-code compileOnly immediate
-code while function () {
-  compileCode('zbranch')
-  dStk.push(compiledCode.length)
-  compile(-1)
-} end-code compileOnly immediate
-code repeat function () {
-  compileCode('branch',dStk.pop())
-} end-code compileOnly immediate
-code depth function () {
-  dStk.push(dStk.length)
-} end-code
-code over function () {
-  dStk.push(dStk[dStk.length-2])
-} end-code
-code drop function () {
-  dStk.length--
-} end-code
-code 2drop function () {
-  dStk.length-=2
-} end-code
-code 3drop function () {
-  dStk.length-=3
-} end-code
