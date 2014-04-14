@@ -5,7 +5,7 @@
   function eForthVM () {		// VM for eForth
 	this.exec = exec			// outer interpreter (the export function)
 	this.type = 0				// function for typing out (the import function)
-	var compiledCode = [0]		// list keeping high level compiled code space
+	var compiledCode = [0]		// high level compiled code space
 	var words = [0]				// list of all defined words
 	var dictionary = {}			// object for the word id list of each unique name
 	var	user = new Array(16)	// user data space
@@ -75,12 +75,15 @@
 			iTib++
 	}	}
 	function nxtTkn (deli) {
-	 	ignoreWhiteSpaces()
-		token = tib.substr(iTib)
+	 	token = tib.substr(iTib)
 		if (deli) {
-			if ((i = token.indexOf(deli))>=0)
-				token=token.substr(0,i)
+			token = token.substr(1)
+			if ((i = token.indexOf(deli))>=0) {
+				token = token.substr(0,i)
+				iTib += deli.length+1
+			}
 		} else {
+			ignoreWhiteSpaces()
 			if (m = token.match(/\S+/))
 				token = m[0]
 		}
@@ -102,7 +105,7 @@
 				return
 		}	}
 		compile(ID)
-		if (n !== undefined) compile(n)
+		if (n !== undefined) compile(n) 	// n could be 0
 	}
 	function execute (xt) {
 		if (typeof(xt)==="function")
@@ -122,9 +125,7 @@
 		while (rStk.length > rStkLen) {
 >>>>>>> dev
 		    ID=compiledCode[ip++]
-		    xt=words[ID].xt; 
-			if (typeof(xt) === 'function') xt()
-			else call(xt)
+			execute (words[ID].xt)
 	}	}
 	function parseNum (token) { var n
 		if ( token.match(/^\$[0-9A-Fa-f]+$/) )	// hex number syntax of leading $
@@ -185,9 +186,16 @@
 		}
 		n = tib.substr(iTib).indexOf(end_code)
 		if (n >= 0) {
-			eval('xt = ' + tib.substr(iTib, n))
+			var c = tib.substr(iTib, n)
+			if (name === 'function') {
+				name = nxtTkn()
+				c = 'this.' + name + '=function' + c
+			} else
+				c = 'xt = ' + c
+			eval(c)
 			iTib += n + end_code.length
-			newWord(name,xt)
+			if (name !== 'function')
+				newWord(name,xt)
 		} else abort('"code ' + name + '" sould be ended with "end-code"')
 	}
 	function newWord (name, xt, src, compileOnly, immediate) {

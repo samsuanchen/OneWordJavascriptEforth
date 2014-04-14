@@ -8,11 +8,14 @@ code \ function () { // 定義 \ 忽略原碼字串到 列尾
 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 \ 前述 code 指令 定義了 immediate 及 反斜線符號 倆新指令, 反斜線符號 用作註解	\
 \ 注意! 反斜線符號 之後必須 空格 這樣 接下來的原碼字串 才會當作 註解 直到列尾	\
-\ code 之後是所定義 新指令的名稱, 接下來直到 end-code 為 javascript function	\
+\ code 之後是 新指令的名稱, 接下來直到 end-code 為所對應的 javascript function	\
 \ 注意! 其間 必須依循 javascript 語法 並以 雙斜線之後 直到列尾的字串 作為註解	\
-\ 用 code 所定義的 是所謂 低階指令 皆以 javascript  function 指定所要相關動作	\
-\ 在此之後用 code 所定義 冒號 : 及 分號 ; 倆指令 則是特別用來定義所謂 高階指令 的	\
-\ 冒號指令 須接 空格 然後才是 新指令名稱, 之後 就可用所有已定義指令指定所要的動作	\
+\ 用 code 所定義的 是所謂 低階指令 均以 javascript function 描述所指定相關動作	\
+\ (注意! code 之後 如果是字串 function, 此 function 並不當作要定義的 指令名稱	\
+\ 這時 從 function 到 end-code 之前 是純粹用來 定義 javascript function 的	\
+\ 這 javascript function 的名稱在 字串 function 之後 並且可在圓括號內宣告參數 )	\
+\ 在此之後用 code 所定義 冒號 : 及 分號 ; 倆指令 是特別用來定義所謂 高階指令 的	\
+\ 冒號指令 須接 空格 然後才是 新指令名稱, 之後 就可用所有已定義指令描述所要的動作	\
 \ 直到 分號指令為止, 其間包括用 反斜線符號 指令 接 空格 直到列尾的字串 當作註解	\
 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 code find function () { // 定義 find 取得 已定義指令的 id (在 words 中的序號)
@@ -102,11 +105,14 @@ uniqueWords \ 檢視 所有 指令名稱 (不重複)
   *				\  相乘
 ;				\  結束	定義
 5 sq . \ 列印出 5 平方 ==> 25
+' alias alias 同義
+' sq 同義 平方  ' .  同義 印出  5 平方 印出
 : 2sq \ 定義 2sq 計算 堆頂數值 平方的 2 倍
   sq				\  計算	堆頂數值 的平方
   2 *				\  取其	2 倍
 ;				\  結束	定義
-3 2sq . \ 列印出 3 平方的 2 倍 ==> 18
+3 2sq . \ 列印出 3 平方的2倍 ==> 18
+' 2sq 同義 平方的2倍  3 平方的2倍 印出
 code char function () { // 定義 char 取隨後 token 字串的 起首字符
   var c=nxtTkn().substr(0,1)	// 隨後	token 的 起首字符
   if(compiling)			// 檢視	是否 編譯狀態
@@ -114,8 +120,8 @@ code char function () { // 定義 char 取隨後 token 字串的 起首字符
   else dStk.push(c)		// 否則	就將 字符 放上堆疊
 } end-code immediate		\  宣告	char 編譯狀態能執行
 char a .			\  列印	字符 a
-: a char a .			\  定義	a 列印出 字符 a
-; a				\  列印	字符 a
+: a char a . ;			\  定義	a 列印出 字符 a
+a				\  列印	字符 a
 code see function () { // 定義 see 檢視 指定名稱 指令 的定義源碼
   var msg			// 輸出	字串
   var name=nxtTkn()		// 隨後	token 當作 指令名稱
@@ -142,4 +148,133 @@ see see	\ 檢視 指令 see 的定義源碼
 see a	\ 檢視 指令 a   定義源碼
 see 2sq	\ 檢視 指令 2sq 的定義源碼
 see ;	\ 檢視 指令 ;   的定義源碼
+
+code function xxx (x) { // 定義 javascript function xxx (並非 定義 指令 xxx)
+  print(x+' is running')
+} end-code
 see xxx	\ 檢視 字串 xxx 的定義源碼
+code yyy function () {	// 定義 指令 zzz
+  xxx(' yyy')		// 呼叫 javascript function xxx (帶 參數)
+} end-code
+yyy
+
+code (do) function () { // ( bgn lmt -- )
+  var bgn=dStk.pop()
+  rStk.push(dStk.pop()), rStk.push(bgn)
+} end-code compileOnly
+code (loop) function () {
+  var t=rStk.length-1, s=t-1
+  if (++rStk[t]<rStk[s]) {
+    ip=compiledCode[ip]
+    return
+  }
+  ip++, rStk.pop(), rStk.pop()
+} end-code compileOnly
+code [ function () {
+  compiling=0
+} end-code immediate
+code ] function () {
+  compiling=1
+} end-code
+code , function () {
+  compile(dStk.pop())
+} end-code
+code do function () {
+  compileCode('(do)')
+  dStk.push(compiledCode.length)
+} end-code immediate compileOnly
+code loop function () {
+  compileCode('(loop)',dStk.pop())
+} end-code immediate compileOnly
+code r@ function () {
+  dStk.push(rStk[rStk.length-1])
+} end-code
+' r@ alias i
+code >r function () {
+  rStk.push(dStk.pop())
+} end-code compileOnly
+code r> function () {
+  dStk.push(rStk.pop())
+} end-code compileOnly
+: x1 10 1 do i . loop ;
+x1
+code (.") function () {
+  print(compiledCode[ip++])
+} end-code compileOnly
+code ." function () {
+  compileCode('(.")',nxtTkn('"'))
+} end-code compileOnly immediate
+code emit function () {
+  print( String.fromCharCode(dStk.pop()) )
+} end-code
+code cr function () {
+  print('\n')
+} end-code
+: x2 cr ." hello, world" ;
+x2
+code zbranch function () {
+  if (dStk.pop()) ip++
+  else ip=compiledCode[ip]
+} end-code compileOnly
+code branch function () {
+  ip=compiledCode[ip]
+} end-code compileOnly
+code if function () {
+  compileCode('zbranch')
+  dStk.push(compiledCode.length)
+  compile(-1)
+} end-code compileOnly immediate
+code else function () {
+  compiledCode[dStk.pop()]=compiledCode.length+2
+  compileCode('branch')
+  dStk.push(compiledCode.length)
+  compile(-1)
+} end-code compileOnly immediate
+code then function () {
+  compiledCode[dStk.pop()]=compiledCode.length
+} end-code compileOnly immediate
+dbg
+: x3 dup . ."  is "
+  if ." non-"
+  then ." zero" ;
+0 x3
+5 x3
+: x4 dup . ."  is "
+  if ." non-zero"
+  else ." zero"
+  then ;
+0 x4
+5 x4
+code begin function () {
+  dStk.push(compiledCode.length)
+} end-code compileOnly immediate
+' ret alias exit
+code again function () {
+  compileCode('branch',dStk.pop())
+} end-code compileOnly immediate
+code until function () {
+  compileCode('zbranch',dStk.pop())
+} end-code compileOnly immediate
+code while function () {
+  compileCode('zbranch')
+  dStk.push(compiledCode.length)
+  compile(-1)
+} end-code compileOnly immediate
+code repeat function () {
+  compileCode('branch',dStk.pop())
+} end-code compileOnly immediate
+code depth function () {
+  dStk.push(dStk.length)
+} end-code
+code over function () {
+  dStk.push(dStk[dStk.length-2])
+} end-code
+code drop function () {
+  dStk.length--
+} end-code
+code 2drop function () {
+  dStk.length-=2
+} end-code
+code 3drop function () {
+  dStk.length-=3
+} end-code
