@@ -42,15 +42,26 @@
 				msg += '\nWhile coding low level word "' + token +'"'
 			//////////////////////////////////////////////////////////////////
 				var O = out || output.innerHTML								//
+<<<<<<< HEAD
 					O = O.split(/\n<inp>\s*code /)							//
+=======
+					O = O.split(/\n<inp>\s*code /)							// split output
+>>>>>>> dev
 				var S = O[O.length-1]										// the source code
 				var p = RegExp(m[1].replace(/[\][(){}.+*?]/g, function(m){	// pattern for token
 					return '\\'+m											// 
 				}),'g')														//
+<<<<<<< HEAD
 				O[O.length-1] = S = S.replace(p,function(t) {				// highlight token
 					return '<err>' +  t + '</err>'							//
 				})															//
 				O = O.join('\n<inp>code ')									//
+=======
+				O[O.length-1] = S.replace(p,function(t) {					// highlight token
+					return '<err>' +  t + '</err>'							//
+				})															//
+				O = O.join('\n<inp>code ')									// join output
+>>>>>>> dev
 				if (out) out = O											//
 				else output.innerHTML = O									// update output
 			//////////////////////////////////////////////////////////////////
@@ -98,10 +109,18 @@
 			 xt()								// execute low  level compiled code
 		else call(xt)							// execute high level compiled code
 	}
+<<<<<<< HEAD
 	function call (icompiledCode) { var ID, xt	// inner compiled code interpreter
 		rStk.push(ip)							// 
 		error=0, ip=icompiledCode
 		while (ip) {
+=======
+	function call (iCompiledCode) { var ID, xt	// inner compiled code interpreter
+		var rStkLen = rStk.length
+		rStk.push(ip)							// 
+		error=0, ip=iCompiledCode
+		while (rStk.length > rStkLen) {
+>>>>>>> dev
 		    ID=compiledCode[ip++]
 		    xt=words[ID].xt; 
 			if (typeof(xt) === 'function') xt()
@@ -158,16 +177,17 @@
 				cr()
 	}	}	}
 	var end_code = 'end-code'
-	var code = function() { // code ( <name> -- ) define a new word using javaScript
+	var code = function() { // code ( <name> -- ) define a new word using javascript
 		ignoreWhiteSpaces()
-		var name = nxtTkn(), line, func, n, xt
+		var name = nxtTkn(), line, n, xt
 		while (tib.substr(iTib).indexOf(end_code)<0 && lines.length)  {
 			line = '\r\n'+lines.shift(); tib += line; showInp(line)
 		}
 		n = tib.substr(iTib).indexOf(end_code)
 		if (n >= 0) {
 			eval('xt = ' + tib.substr(iTib, n))
-			iTib += n + end_code.length; newWord(name,xt)
+			iTib += n + end_code.length
+			newWord(name,xt)
 		} else abort('"code ' + name + '" sould be ended with "end-code"')
 	}
 	function newWord (name, xt, src, compileOnly, immediate) {
