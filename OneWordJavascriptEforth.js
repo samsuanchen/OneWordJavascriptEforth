@@ -28,10 +28,10 @@
 	function reset	 (   ) { error = 1, dStk = [], rStk = [] }
 	function print	 (msg) { if (type && msg) type(msg)		 }
 	function cr		 (   ) { print("\n"					   ) }
-	function showOk  (txt) { print(' <ok>' + txt + '</ok>' ) }
-	function showInp (txt) { print('<inp>' + txt + '</inp>') }
-	function showWrn (txt) { print('<wrn>' + txt + '</wrn>') }
-	function showErr (txt) { print('<err>' + txt + '</err>\n') }
+	function showOk  (txt) { print(' <ok>' + txt.replace(/</g,'&lt;') + '</ok>' ) }
+	function showInp (txt) { print('<inp>' + txt.replace(/</g,'&lt;') + '</inp> ') }
+	function showWrn (txt) { print('<wrn>' + txt.replace(/</g,'&lt;') + '</wrn>') }
+	function showErr (txt) { print('<err>' + txt.replace(/</g,'&lt;') + '</err>\n') }
 	function abort   (msg) {
 		if (compiling) {
 			compiling = 0
@@ -48,7 +48,7 @@
 					return '\\'+m											// 
 				}),'g')														//
 				O[O.length-1] = S.replace(p,function(t) {					// highlight token
-					return '<err>' +  t + '</err>'							//
+					return '<err>' +  t.replace(/</g,'&lt;') + '</err>'		//
 				})															//
 				O = O.join('\n<inp>code ')									// join output
 				if (out) out = O											//
@@ -129,7 +129,7 @@
 			}
 			tib = lines.shift(), iTib = 0
 			if (tib.trim()) {
-				showInp(tib.replace(/</g,'&lt;'))
+				showInp(tib)
 				do {
 					token = nxtTkn() 						// get token
 					if (!token) break
@@ -192,13 +192,16 @@
 		var IDs = dictionary[name], nWords = words.length
 		if (IDs) {
 			IDs.push(nWords)
-			print(' <wrn>"' + name + '" defined ' + IDs.length + ' times</wrn>') 
+			print(' <wrn>"' + name.replace(/</g,'&lt;') +
+					'" defined ' + IDs.length + ' times</wrn>') 
 		} else dictionary[name] = [nWords]
 		words.push(word)
 	}
  	newWord('code', code)					// this should be the only defined word
  	function dbg () {
- 		console.log(words.length)
+ 		var id=words.length-1
+ 		if (id===76)
+ 			console.log(id,words[id].name,dStk.length,tib.substr(iTib))
  	}
  	newWord('dbg',dbg)						// this is just for debugging
   } 			

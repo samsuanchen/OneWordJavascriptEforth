@@ -90,20 +90,20 @@ code dup function () { // 定義 dup 複製 堆頂數值
 code .s function () { // 定義 .s 檢視 堆疊數值
   var s=dStk.join(' ')		// 以空格區隔 之 堆疊數值字串
   s=s||'empty'			// 若 空字串 則用 'empty'
-  print(' '+s)			// 列印 字串
+  print(' '+s.replace(/</g,'&lt;'))	// 列印 字串
 } end-code
 code words function () { // 定義 words 檢視 所有 指令名稱 (可能重複)
   var s=words.map(		// 從 words 陣列 針對每個指令 w
     function(w){return w.name}	// 取其 名稱
   ).join(' ')			// 以空格區隔
-  print(' '+s)			// 列印
+  print(' '+s.replace(/</g,'&lt;'))	// 列印
 } end-code
 words \ 檢視 所有 指令名稱
 code uniqueWords function () { // 定義 uniqueWords 檢視 所有 指令名稱 (不重複)
   var t=''
   for(var w in dictionary)	// 從 dictionary 物件 針對每個指令 w
     t+=' '+w			// 採用	空格 區隔
-  print(t)			// 列印
+  print(t.replace(/</g,'&lt;'))		// 列印
 } end-code
 uniqueWords \ 檢視 所有 指令名稱 (不重複)
 : sq \ 定義 sq 計算 堆頂數值 的平方
@@ -148,7 +148,7 @@ code see function () { // 定義 see 檢視 指定名稱 指令 的定義源碼
       msg+=' immediate'		// 字串	加接 immediate
   } else
       msg=name+' undefined'	// 字串	顯示 未定義
-  print('\n'+msg)		// 列印	字串
+  print('\n'+msg.replace(/</g,'&lt;'))	// 列印	字串
 } end-code
 see see	\ 檢視 指令 see 的定義源碼
 see a	\ 檢視 指令 a   定義源碼
@@ -172,7 +172,7 @@ code abort" function () {
   if (compiling) compileCode('(abort")',msg)
   else abort(msg)
 } end-code compileOnly immediate
-abort" test"
+\ abort" test"
 
 code (do) function () { // ( bgn lmt -- )
   var bgn=dStk.pop()
@@ -186,15 +186,6 @@ code (loop) function () {
   }
   ip++, rStk.pop(), rStk.pop()
 } end-code compileOnly
-code [ function () {
-  compiling=0
-} end-code immediate
-code ] function () {
-  compiling=1
-} end-code
-code , function () {
-  compile(dStk.pop())
-} end-code
 code do function () {
   compileCode('(do)')
   dStk.push(compiledCode.length)
@@ -206,14 +197,6 @@ code r@ function () {
   dStk.push(rStk[rStk.length-1])
 } end-code
 ' r@ alias i
-code >r function () {
-  rStk.push(dStk.pop())
-} end-code compileOnly
-code r> function () {
-  dStk.push(rStk.pop())
-} end-code compileOnly
-: x1 10 1 do i . loop ;
-x1
 code (.") function () {
   print(compiledCode[ip++])
 } end-code compileOnly
@@ -221,13 +204,51 @@ code ." function () {
   compileCode('(.")',nxtTkn('"'))
 } end-code compileOnly immediate
 code emit function () {
-  print( String.fromCharCode(dStk.pop()) )
+  print( String.fromCharCode(dStk.pop()).replace(/</g,'&lt;') )
 } end-code
 code cr function () {
   print('\n')
 } end-code
+code drop function () {
+  dStk.length--
+} end-code
+code .r function () { // ( n w -- ) 
+  var w=dStk.pop(), s=dStk.pop().toString(base)
+  print('         '.substr(0,w-s.length)+s)
+} end-code
+code 2drop function () {
+  dStk.length-=2
+} end-code
+code 3drop function () {
+  dStk.length-=3
+} end-code
+code 4drop function () {
+  dStk.length-=4
+} end-code
+: x1 10 1
+  do i cr 10 1
+     do dup i * .
+     loop drop
+  loop
+; x1
 : x2 cr ." hello, world" ;
 x2
+
+code [ function () {
+  compiling=0
+} end-code immediate
+code ] function () {
+  compiling=1
+} end-code
+code , function () {
+  compile(dStk.pop())
+} end-code
+code >r function () {
+  rStk.push(dStk.pop())
+} end-code compileOnly
+code r> function () {
+  dStk.push(rStk.pop())
+} end-code compileOnly
 code zbranch function () {
   if (dStk.pop()) ip++
   else ip=compiledCode[ip]
