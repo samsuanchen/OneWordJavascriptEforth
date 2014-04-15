@@ -162,7 +162,8 @@
 	var end_code = 'end-code'
 	var code = function() { // code ( <name> -- ) define a new word using javascript
 		ignoreWhiteSpaces()
-		var name = nxtTkn(), line, n, xt
+		var token = nxtTkn(), line, n, xt
+		var name = token
 		while (tib.substr(iTib).indexOf(end_code)<0 && lines.length)  {
 			line = '\r\n'+lines.shift(); tib += line; showInp(line)
 		}
@@ -176,7 +177,7 @@
 				c = 'xt = ' + c
 			eval(c)
 			iTib += n + end_code.length
-			if (name !== 'function')
+			if (token !== 'function')
 				newWord(name,xt)
 		} else abort('"code ' + name + '" sould be ended with "end-code"')
 	}
