@@ -17,7 +17,12 @@
 		return words			// list of all defined words
 	}
 	this.setWords = function setWords(w){
-		return words = w		// list of all defined words
+		words.length=3
+		for (var i=3; i<w.length; i++) {
+			w[i].xt=eval('('+w[i].xt+')')
+			words.push(w[i])
+		}
+		return words			// list of all defined words
 	}
 	var dictionary = {}			// object for the word id list of each unique name
 	this.getDictionary = function getDictionary(){
@@ -183,27 +188,27 @@
 				if (!compiling) showOk('ok')					// show ok
 				cr()
 	}	}	}
-	var end_code = 'end-code'
+	var end_code = '} end-code'
 	var code = function() { // code ( <name> -- ) define a new word using javascript
-		VM.ignoreWhiteSpaces()
-		var token = VM.nxtTkn(), line, n, xt
+		ignoreWhiteSpaces()
+		var token = nxtTkn(), line, n, xt
 		var name = token
 		while (tib.substr(iTib).indexOf(end_code)<0 && lines.length)  {
-			line = '\r\n'+lines.shift(); tib += line; VM.showInp(line)
+			line = '\r\n'+lines.shift(); tib += line; showInp(line)
 		}
 		n = tib.substr(iTib).indexOf(end_code)
 		if (n >= 0) {
-			var c = tib.substr(iTib, n)
+			var c = tib.substr(iTib, n+2)
 			if (name === 'function') {
-				name = VM.nxtTkn()
+				name = nxtTkn()
 				c = 'this.' + name + '=function' + c
 			} else
 				c = 'xt = ' + c
 			eval(c)
 			iTib += n + end_code.length
 			if (token !== 'function')
-				VM.newWord(name,xt)
-		} else VM.abort('"code ' + name + '" sould be ended with "end-code"')
+				newWord(name,xt)
+		} else abort('"code ' + name + '" sould be ended with "end-code"')
 	}
 	this.newWord=newWord
 	function newWord (name, xt, src, compileOnly, immediate) {
@@ -253,8 +258,8 @@
  			}
  			msg = 'debugging '	// pause if id in debugged and set break point here
  		}
- 		msg += VM.deCompile(id)
- 		VM.showWrn(msg)
+ 		msg += deCompile(id)
+ 		showWrn(msg)
  		console.log(msg)
  	}							// list of id being debugged
 	this.execute=execute

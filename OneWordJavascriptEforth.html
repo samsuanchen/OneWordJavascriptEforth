@@ -5,7 +5,11 @@ yapcheahshen@gmail.com samsuanchen@gmail.com ChenHanSunDing@gmail.com -->
 	<link type="text/css" rel="stylesheet" href="OneWordJavascriptEforth.css">
 </head><body onload="onLoad()"><center><table><tr><td>
 	<center><h3>This Javascript <mrk>eForth VM</mrk> initially has only the word "<mrk>code</mrk>"</h3>
-	Enter eForth <mrk>source codes</mrk> in the following text area.</center></div>
+	<input	id="ignoreDef" onchange='ignoreDefChange()' type="checkbox">ignoreTextOf
+	<input	id="pattern" size=82 value='code(.+?\n)+?\} end-code.*?\n'><br>
+	Enter topic<input id="topic" onchange='topicChange()' onkeydown='topicSelect()' size=43 value=''>
+	Enter <mrk>source code</mrk> in the following text area</center>
+	</div> 
 	<textarea id="input">code immediate function () { // 定義 immediate 使 最後定義的指令 編譯狀態能執行
   words[words.length-1]		// 最後定義的 指令
   .immediate=1			// 設定為 編譯狀態能執行
@@ -222,7 +226,7 @@ code (do) function () { // ( bgn lmt -- )
 dbg
 code (loop) function () {
   var t=rStk.length-1, s=t-1
-  if (++rStk[t]<rStk[s]) {
+  if (rStk[s]>++rStk[t]) {
     ip=compiledCode[ip]
     return
   }
@@ -257,7 +261,8 @@ code ." function () {
 } end-code compileOnly immediate
 dbg
 code emit function () { // ( charCode -- )
-  print( String.fromCharCode(dStk.pop()).replace(/</g,'&lt;') )
+  var p=RegExp(String.fromCharCode(60),g)
+  print( String.fromCharCode(dStk.pop()).replace(p,'&lt;') )
 } end-code
 dbg
 code cr function () {
@@ -296,7 +301,7 @@ code for function () {
 dbg
 code (next) function () {
   var rTop=--rStk[rStk.length-1]
-  if (rTop<0) {
+  if (0>rTop) {
     ip++, rStk.length--
     return
   } 
@@ -404,9 +409,12 @@ code ?dup function () {
     dStk.push(top)
 } end-code
 dbg
-code < function () {
+code changeName function () {
+  words[words.length].name=nxtTkn()
+} end-code
+code xxx function () {
   var top=dStk.pop()
-  dStk[dStk.length-1]=dStk[dStk.length-1]<top
+  dStk[dStk.length-1]=top>dStk[dStk.length-1]
 } end-code
 dbg
 : x5 9
@@ -422,14 +430,14 @@ code $" function () { // 定義 $"  取源碼字串直到 "
 } end-code
 dbg
 $" abc" $" def" + . \ 印出 abcdef
-: x6 9 begin dup . 1- dup 1 < until ;
+: x6 9 begin dup . 1- dup -1 = until ;
 dbg
 x6 \ 印出 9 8 7 6 5 4 3 2 1
 code debug function() {
   var token=nxtTkn()
   var id=typeof token==='string'?fndWrd(token):token
   if (words[id]) {
-    if (debugged.indexOf(id)<0)
+    if (0>debugged.indexOf(id))
       debugged.push(id)
     else
       print(id+'already in debugged')
@@ -441,20 +449,21 @@ debug x5
 x5</textarea><div class="blk"><center>
 	Click <button onclick="evaluateInput()">evaluate</button>
 	to see the <mrk>result</mrk> in the following output area.
-	<input	id="outputStepwise" type="checkbox">output stepwise
-	<input	id="saveWords" type="checkbox">save words
+	<input	id="outputStepwise" type="checkbox">outputStepwise
+	<input	id="saveWords" type="checkbox">saveWords
 	</center></div>
 	<pre id="output"></pre>
-	<table><tr>
+	<table id="picture"><tr>
 	<td width="60%"><img src="OneWordJavascriptEforth.jpg" width="80%"></td>
-	<td width="40%" align="left">YapCheahShen@gmail.com<br>左　葉 健 欣<br>
+	<td width="40%" align="left">ChenHanSunDing@gmail.com<br>右　丁陳漢蓀<br>
 	    SamSuanChen@gmail.com<br>中　陳　　爽<br>
-		ChenHanSunDing@gmail.com<br>右　丁陳漢蓀</td>
+		YapCheahShen@gmail.com<br>左　葉 健 欣</td>
 	</tr></table></td></tr></table></center>
 	<script src="OneWordJavascriptEforth.js"></script>
 	<script>
 	'uses strict' 									// check all undefined references
 	var inp, out, compiledCode, words, dictionary	// local variables used
+	var topics=localStorage.getItem('OneWordJavascriptEforth.topics').split(',')||[], iTopic=topics.length
 	var VM = new eForthVM()							// get eforth VM
 	function onLoad() {								// the function exeduted while loading this web page
 		var x=localStorage.getItem('OneWordJavascriptEforth.f') // read previously used source code
@@ -463,15 +472,13 @@ x5</textarea><div class="blk"><center>
 			var x=localStorage.getItem('OneWordJavascriptEforth.json')
 			if (x) {
 				x=JSON.parse(x)
-				compiledCode=x.compiledCode
-				dictionary	=x.dictionary
-				words		=x.words.map(function(w){
-					if (w.xt) w.xt=eval('('+w.xt+')')
-					return w
-				})
-				VM.setCompiledCode	(compiledCode)
-				VM.setDictionary	(dictionary	 )
-				VM.setWords			(words		 )
+				compiledCode=VM.setCompiledCode	(x.compiledCode	)
+				dictionary	=VM.setDictionary	(x.dictionary	)
+				words		=VM.setWords		(x.words		)
+				output.innerHTML='<ok>This system currently has the following words:</ok>\n'+
+					words.map(function(w){
+						return w?w.name:''
+					}).join(' ')+'\n'
 			}
 		}
 		if (!x) {
@@ -480,9 +487,51 @@ x5</textarea><div class="blk"><center>
 			dictionary	=VM.getDictionary	()
 		}
 	}
+	function showTopic(i) {
+		topic.value=topics.length>i?topics[i]:''
+		topicChange()
+	}
+	var KEY_UP=38, KEY_DOWN=40
+	function topicSelect(e) {
+		var k=event.keyCode, t, x
+		if (k===KEY_UP&&iTopic)
+			showTopic(--iTopic)
+		else if (k===KEY_DOWN) {
+		    if (iTopic<topics.length)
+				showTopic(++iTopic)
+		} 
+	}
+	function topicChange() {
+		var t=topic.value.trim()
+		if (0>topics.indexOf(t)) topics.push(t)
+		var x=localStorage.getItem('OneWordJavascriptEforth.'+t)||''
+		if (x) input.value=x
+		else {
+			x=input.value
+			localStorage.setItem('OneWordJavascriptEforth.'+t,x)
+		}
+		output.innerHTML+='topic "'+t+'" of length '+x.length+'\n'
+	}
+	function ignoreDefChange() {
+	    if (ignoreDef.checked) {
+	    	var p=RegExp(pattern.value,'g')
+			input.value=input.value.replace(p,function(m,m1,m2,m3){
+				return ''
+			})
+		}
+	}
 	function evaluateInput() {						// the function processing source code
+		output.innerHTML+=Date()+'\n'
 		inp = input.value							// get source code
-		localStorage.setItem('OneWordJavascriptEforth.f',inp) // save source code
+		var t=topic.value.trim()
+		if (t) {
+			localStorage.setItem('OneWordJavascriptEforth.'+t,inp)
+			if (0>topics.indexOf(t)) {
+				topics.push(t)
+				localStorage.setItem('OneWordJavascriptEforth.topics',topics)
+			}
+		} else
+			localStorage.setItem('OneWordJavascriptEforth.f',inp) // save source code
 		input.scrollTop = input.scrollHeight		// scroll up source code area
 		out = ''									// initiate output outfer
 		VM.exec(inp)								// process source code
