@@ -1,9 +1,10 @@
-﻿<!-- OneWordJavascriptEforth.html 2012/2/16 ~ 2014/04/08
+<!-- OneWordJavascriptEforth.html 2012/2/16 ~ 2014/04/08
 yapcheahshen@gmail.com samsuanchen@gmail.com ChenHanSunDing@gmail.com -->
 <html><head>
+	<meta charset="utf-8" />
 	<title>One-Word eForth</title>
 	<link type="text/css" rel="stylesheet" href="OneWordJavascriptEforth.css">
-</head><body onload="onLoad()"><center><table><tr><td>
+</head><body onload="init()"><center><table><tr><td>
 	<center><h3>This Javascript <mrk>eForth VM</mrk> initially has only the word "<mrk>code</mrk>"</h3>
 	<input	id="ignoreDef" onchange='ignoreDefChange()' type="checkbox">ignoreTextOf
 	<input	id="pattern" size=82 value='code(.+?\n)+?\} end-code.*?\n'><br>
@@ -462,60 +463,69 @@ x5</textarea><div class="blk"><center>
 	<script src="OneWordJavascriptEforth.js"></script>
 	<script>
 	'uses strict' 									// check all undefined references
-	var inp, out, compiledCode, words, dictionary	// local variables used
-	var topics=localStorage.getItem('OneWordJavascriptEforth.topics').split(',')||[], iTopic=topics.length
+	var inp, out, compiledCode, words, dictionary,x,t	// local variables used
+	var topics=localStorage.getItem('OneWordJavascriptEforth.topics').split(',')||[]
+	var iTopic=localStorage.getItem('OneWordJavascriptEforth.iTopic')||0
+	topic.value=getTopic(iTopic)					// view the source code
 	var VM = new eForthVM()							// get eforth VM
-	function onLoad() {								// the function exeduted while loading this web page
-		var x=localStorage.getItem('OneWordJavascriptEforth.f') // read previously used source code
+	function getTopic(i) {
+		return (topics.length>i&&i>=0?topics[i]:'')
+	}
+	function init() {								// the function exeduted while loading this web page
+		t=topic.value||'f'
+		x=localStorage.getItem('OneWordJavascriptEforth.'+t) // read previously used source code
+		if (x)
+			input.value=x
+		x=localStorage.getItem('OneWordJavascriptEforth.json')
 		if (x) {
-			input.value=x							// view the source code
-			var x=localStorage.getItem('OneWordJavascriptEforth.json')
-			if (x) {
-				x=JSON.parse(x)
-				compiledCode=VM.setCompiledCode	(x.compiledCode	)
-				dictionary	=VM.setDictionary	(x.dictionary	)
-				words		=VM.setWords		(x.words		)
-				output.innerHTML='<ok>This system currently has the following words:</ok>\n'+
-					words.map(function(w){
-						return w?w.name:''
-					}).join(' ')+'\n'
-			}
-		}
-		if (!x) {
+			x=JSON.parse(x)
+			compiledCode=VM.setCompiledCode	(x.compiledCode	)
+			dictionary	=VM.setDictionary	(x.dictionary	)
+			words		=VM.setWords		(x.words		)
+			output.innerHTML+='<ok>This system currently has the following words:</ok>\n'+
+				words.map(function(w){
+					return w?w.name:''
+				}).join(' ')+'\n'
+		} else {
 			compiledCode=VM.getCompiledCode	()
 			words		=VM.getWords		()
 			dictionary	=VM.getDictionary	()
 		}
 	}
 	function showTopic(i) {
-		topic.value=topics.length>i?topics[i]:''
-		topicChange()
+		var x=getTopic(i)
+		if (x!==topic.value) {
+			topic.value=x
+			topicChange()
+		}
 	}
 	var KEY_UP=38, KEY_DOWN=40
-	function topicSelect(e) {
-		var k=event.keyCode, t, x
+	function topicSelect() {
+		var k=event.keyCode
 		if (k===KEY_UP&&iTopic)
 			showTopic(--iTopic)
-		else if (k===KEY_DOWN) {
-		    if (iTopic<topics.length)
-				showTopic(++iTopic)
-		} 
+		else if (k===KEY_DOWN&&topics.length>iTopic)
+			showTopic(++iTopic)
+	}
+	function quote(t){
+		return t.match('"')?"'"+t+"'":'"'+t+'"'
 	}
 	function topicChange() {
 		var t=topic.value.trim()
 		if (0>topics.indexOf(t)) topics.push(t)
-		var x=localStorage.getItem('OneWordJavascriptEforth.'+t)||''
+		var x=localStorage.getItem('OneWordJavascriptEforth.'+(t||'f'))||''
 		if (x) input.value=x
 		else {
 			x=input.value
-			localStorage.setItem('OneWordJavascriptEforth.'+t,x)
+			localStorage.setItem('OneWordJavascriptEforth.'+(t||'f'),x)
 		}
-		output.innerHTML+='topic "'+t+'" of length '+x.length+'\n'
+		var o=output.innerHTML.replace(/topic (\S+) of length (\d+)\n$/,'')
+		output.innerHTML=o+'topic '+quote(t)+' of length '+x.length+'\n'
 	}
 	function ignoreDefChange() {
 	    if (ignoreDef.checked) {
 	    	var p=RegExp(pattern.value,'g')
-			input.value=input.value.replace(p,function(m,m1,m2,m3){
+			input.value=input.value.replace(p,function(m){
 				return ''
 			})
 		}
@@ -530,8 +540,14 @@ x5</textarea><div class="blk"><center>
 				topics.push(t)
 				localStorage.setItem('OneWordJavascriptEforth.topics',topics)
 			}
-		} else
+		} else {
 			localStorage.setItem('OneWordJavascriptEforth.f',inp) // save source code
+			if (!inp) {
+				compiledCode=VM.setCompiledCode	([]				 )
+				dictionary	=VM.setDictionary	([]				 )
+				words		=VM.setWords		(words.slice(0,3))
+			}
+		}
 		input.scrollTop = input.scrollHeight		// scroll up source code area
 		out = ''									// initiate output outfer
 		VM.exec(inp)								// process source code
