@@ -12,12 +12,12 @@
 	this.setCompiledCode = function setCompiledCode(c){
 		return compiledCode = c	// high level compiled code space
 	}
-	var words = [0]				// list of all defined words
+	var words = {forth:[0]}; 			// list of all word-lists
 	this.getWords = function getWords(){
-		return words			// list of all defined words
+		return words.forth			// list of all defined words
 	}
 	this.setWords = function setWords(w){
-		return words = w		// list of all defined words
+		return words.forth = w		// list of all defined words
 	}
 	var dictionary = {}			// object for the word id list of each unique name
 	this.getDictionary = function getDictionary(){
@@ -156,7 +156,7 @@
 					if (!token) break
 					ID = fndWrd(token) 						// search word for ID
 					if (ID) {
-						word = words[ID]						// get word
+						word = words.forth[ID]						// get word
 						if (word.immediate || ! compiling) {
 							if (debugged.indexOf(ID)>=0) {		// check if being debugged
 								dbg(ID)							// debug
@@ -215,36 +215,36 @@
 	}
 	function newWord (name, xt, src, compileOnly, immediate) {
 		var word = new Word(name, xt, src, compileOnly, immediate);
-		var IDs = dictionary[name], ID = words.length
+		var IDs = dictionary[name], ID = words.forth.length
 		if (IDs) {
 			IDs.push(ID)
 			print(' <wrn>"' + name.replace(/</g,'&lt;') +
 					'" redefined ' + IDs + ' </wrn>') 
 		} else dictionary[name] = [ID]
-		words.push(word)
+		words.forth.push(word)
  		console.log(
- 			'words['+ID+']',
- 			'name:'+words[ID].name,
+ 			'words.forth['+ID+']',
+ 			'name:'+words.forth[ID].name,
  			'depth:'+dStk.length,
  			'tib:'+tib.substr(iTib)
  		)
 	}	
 	this.deCompile=deCompile
 	function deCompile (id) {
-		var src = words[id].src, name = words[id].name
+		var src = words.forth[id].src, name = words.forth[id].name
 		src = src		?
 			':' + src	:
-			'code ' + name + ' ' + words[id].xt + ' end-code'
-		if (words[id].compileOnly) src += ' compileOnly'
-		if (words[id].immediate  ) src += ' immediate'
-		src = 'words[' + id + '] ' + name + '\n' + src
+			'code ' + name + ' ' + words.forth[id].xt + ' end-code'
+		if (words.forth[id].compileOnly) src += ' compileOnly'
+		if (words.forth[id].immediate  ) src += ' immediate'
+		src = 'words.forth[' + id + '] ' + name + '\n' + src
 		return src
 	}
 	var debugged = []
  	function dbg (id) {
  		var msg
  		if (!id) {				// id undefined
-	 		id = words.length-1
+	 		id = words.forth.length-1
 	 		msg = 'showing '	// pause if id   undefined and set break point here
 	 	} else {				// id in debugged
  			if (!outputStepwise.checked) {
@@ -271,7 +271,7 @@
 		error=0, ip=iCompiledCode
 		while (rStk.length > rStkLen) {
 		    id=compiledCode[ip++]
-		    xt=words[id].xt
+		    xt=words.forth[id].xt
 			execute (xt)
 	}	}
  	newWord('code', code)		// this should be the only defined word

@@ -7,7 +7,7 @@ yapcheahshen@gmail.com samsuanchen@gmail.com ChenHanSunDing@gmail.com -->
 	<center><h3>This Javascript <mrk>eForth VM</mrk> initially has only the word "<mrk>code</mrk>"</h3>
 	Enter eForth <mrk>source codes</mrk> in the following text area.</center></div>
 	<textarea id="input">code immediate function () { // 定義 immediate 使 最後定義的指令 編譯狀態能執行
-  words[words.length-1]		// 最後定義的 指令
+  words.forth[words.forth.length-1]		// 最後定義的 指令
   .immediate=1			// 設定為 編譯狀態能執行
 } end-code
 dbg
@@ -46,7 +46,7 @@ code ' function () { // 定義 ' 取得 已定義指令的 id (在 words 陣列�
 } end-code
 dbg
 code alias function () { // 定義 alias 用以宣告 已定義指令 的別名
-  var id=dStk.pop(), w=words[id]// 已定義指令 w
+  var id=dStk.pop(), w=words.forth[id]// 已定義指令 w
   newWord(nxtTkn(),w.xt,w.src)	// 其 別名 為 隨後 token 字串
 } end-code
 dbg
@@ -59,7 +59,7 @@ code : function () { // 定義 : 用以定義 高階指令
 } end-code
 dbg
 code compileOnly function () { // 定義 compileOnly 使 最後定義指令 編譯狀態才編碼
-  words[words.length-1]		// 最後定義的 指令
+  words.forth[words.forth.length-1]		// 最後定義的 指令
   .compileOnly=1		// 設定為 編譯狀態才編碼
 } end-code
 dbg
@@ -118,7 +118,7 @@ code .s function () { // 定義 .s 檢視 堆疊數值
 } end-code
 dbg
 code words function () { // 定義 words 檢視 所有 指令名稱 (可能重複)
-  var s=words.map(		// 從 words 陣列 針對每個指令 w
+  var s=words.forth.map(		// 從 words 陣列 針對每個指令 w
     function(w){return w.name}	// 取其 名稱
   ).join(' ')			// 以空格區隔
   print(' '+s)			// 列印
@@ -172,7 +172,7 @@ code see function () { // 定義 see 檢視 指定名稱 指令 的定義源碼
   var ids=dictionary[name]	// 取其	記錄 id 的陣列
   if (ids) {			// 檢視	記錄 id 的陣列 是否存在
     var id=ids[ids.length-1]	// 取其	最後的 id
-    var w=words[id]		// 取其	word
+    var w=words.forth[id]		// 取其	word
     if (w.src)			// 檢視	高階定義源碼 是否存在
 	msg=':'+w.src		// 若是	輸出字串 用 高階定義源碼
     else
@@ -428,7 +428,7 @@ x6 \ 印出 9 8 7 6 5 4 3 2 1
 code debug function() {
   var token=nxtTkn()
   var id=typeof token==='string'?fndWrd(token):token
-  if (words[id]) {
+  if (words.forth[id]) {
     if (debugged.indexOf(id)<0)
       debugged.push(id)
     else
