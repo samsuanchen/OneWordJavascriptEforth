@@ -206,14 +206,15 @@
 		} else VM.abort('"code ' + name + '" sould be ended with "end-code"')
 	}
 	this.newWord=newWord
+	function Word(name, xt, src, compileOnly, immediate) {
+		this.name		 = name;
+		this.xt			 = xt;
+		this.src		 = src || '';
+		this.compileOnly = compileOnly || 0;
+		this.immediate	 = immediate || 0;
+	}
 	function newWord (name, xt, src, compileOnly, immediate) {
-		var word = {
-			name		: name				 ,
-			xt			: xt				 ,
-			src			: src			|| '',
-			compileOnly : compileOnly	|| 0 ,
-			immediate	: immediate		|| 0
-		}
+		var word = new Word(name, xt, src, compileOnly, immediate);
 		var IDs = dictionary[name], ID = words.length
 		if (IDs) {
 			IDs.push(ID)
@@ -227,7 +228,7 @@
  			'depth:'+dStk.length,
  			'tib:'+tib.substr(iTib)
  		)
-	}
+	}	
 	this.deCompile=deCompile
 	function deCompile (id) {
 		var src = words[id].src, name = words[id].name
