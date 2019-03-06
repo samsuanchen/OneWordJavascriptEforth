@@ -463,13 +463,14 @@ x5</textarea><div class="blk"><center>
 	<script src="OneWordJavascriptEforth.js"></script>
 	<script>
 	'uses strict' 									// check all undefined references
-	var inp, out, compiledCode, words, dictionary,x,t	// local variables used
-	var topics=localStorage.getItem('OneWordJavascriptEforth.topics').split(',')||[]
-	var iTopic=localStorage.getItem('OneWordJavascriptEforth.iTopic')||0
-	topic.value=getTopic(iTopic)					// view the source code
-	var VM = new eForthVM()							// get eforth VM
+	var inp, out, compiledCode, words, dictionary,x,t;	// local variables used
+	var topics=localStorage.getItem('OneWordJavascriptEforth.topics')||'';
+	topics=topics.split(',');
+	var iTopic=localStorage.getItem('OneWordJavascriptEforth.iTopic')||0;
+	topic.value=getTopic(iTopic);					// view the source code
+	var VM = new eForthVM();							// get eforth VM
 	function getTopic(i) {
-		return (topics.length>i&&i>=0?topics[i]:'')
+		return (topics.length>i&&i>=0?topics[i]:'');
 	}
 	function init() {								// the function exeduted while loading this web page
 		t=topic.value||'f'
